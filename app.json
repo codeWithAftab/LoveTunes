@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "spotify-project",
-    "slug": "spotify-project",
+    "name": "love-tunes",
+    "slug": "love-tunes",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#121212"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -19,6 +19,14 @@
     },
     "ios": {
       "bundleIdentifier": "com.spotify"
+    },
+    "android": {
+      "package": "com.lovetunes.aftab"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "4837271c-004c-497f-9527-d3857d351a5a"
+      }
     }
   }
 }

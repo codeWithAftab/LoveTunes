@@ -4,56 +4,59 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons,AntDesign,MaterialCommunityIcons,Entypo } from "@expo/vector-icons";
+import { SaavnAPI } from "../lib/api";
+import SongItem from "../components/SongItem";
+import { useFloatPlayer } from "../StackNavigator";
 
 const SongInfoScreen = () => {
   const route = useRoute();
-  console.log(route.params);
-  const albumUrl = route?.params?.item?.track?.album?.uri;
+  console.log("route",route.params);
+  console.log()
+  const { currentTrack, currentSound, isPlaying, play } = useFloatPlayer();
+  
+  const [item, setItem] = useState( route.params.item)
   const [tracks, setTracks] = useState([]);
   const navigation = useNavigation();
-  const albumId = albumUrl.split(":")[2];
-  console.log(albumId);
+
   useEffect(() => {
-    async function fetchSongs() {
-      const accessToken = await AsyncStorage.getItem("token");
-      try {
-        const response = await fetch(
-          `https://api.spotify.com/v1/albums/${albumId}/tracks`,
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("failed to fetch album songs");
-        }
-
-        const data = await response.json();
-        const tracks = data.items;
-        setTracks(tracks);
-      } catch (err) {
-        console.log(err.message);
-      }
-    }
-    fetchSongs();
+    fetchSongs(item.id)
+    
   }, []);
-  console.log(tracks);
+  
+  function showArtistNames(item){
+    if (item.type == "playlist") {
+      return ""
+    } else if (item.type == "album") {
+      return item?.primaryArtists
+    } 
+    return item?.primaryArtists
+    
+
+  }
+
+  async function fetchSongs(id){
+    const api_manager = new SaavnAPI()
+    console.log("type", item.type)
+    if (item.type=="album") {
+      const data = await api_manager.albumDetails(id)
+      setTracks(data.songs)
+    } else if (item.type=="playlist") {
+      console.log("playishkjh")
+      const data = await api_manager.playlistDetails(id)
+      setTracks(data.songs)
+      console.log(item)
+    }
+  }
+  // console.log(tracks);
   return (
     <LinearGradient colors={["#040306", "#131624"]} style={{ flex: 1 }}>
       <ScrollView style={{ marginTop: 50 }}>
         <View style={{ flexDirection: "row", padding: 12 }}>
-          <Ionicons
-            onPress={() => navigation.goBack()}
-            name="arrow-back"
-            size={24}
-            color="white"
-          />
+         
           <View style={{ flex: 1, alignItems: "center" }}>
             <Image
-              style={{ width: 200, height: 200 }}
-              source={{ uri: route?.params?.item?.track?.album?.images[0].url }}
+              style={{ width: 250, height: 250, borderRadius:5 }}
+              source={{ uri: item?.image[2].link }}
             />
           </View>
         </View>
@@ -66,7 +69,7 @@ const SongInfoScreen = () => {
             fontWeight: "bold",
           }}
         >
-          {route?.params?.item?.track?.name}
+          {item?.name || item?.title}
         </Text>
         <View
           style={{
@@ -78,11 +81,11 @@ const SongInfoScreen = () => {
             gap: 7,
           }}
         >
-          {route?.params?.item?.track?.artists?.map((item, index) => (
+      
             <Text style={{ color: "#909090", fontSize: 13, fontWeight: "500" }}>
-              {item.name}
+              {showArtistNames(item)}
             </Text>
-          ))}
+ 
         </View>
         <Pressable
             style={{
@@ -97,7 +100,7 @@ const SongInfoScreen = () => {
                 width: 30,
                 height: 30,
                 borderRadius: 15,
-                backgroundColor: "#1DB954",
+                backgroundColor: "#EB3660",
                 justifyContent: "center",
                 alignItems: "center",
               }}
@@ -108,11 +111,7 @@ const SongInfoScreen = () => {
             <View
               style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
             >
-              <MaterialCommunityIcons
-                name="cross-bolnisi"
-                size={24}
-                color="#1DB954"
-              />
+         
               <Pressable
            
                 style={{
@@ -121,7 +120,7 @@ const SongInfoScreen = () => {
                   borderRadius: 30,
                   justifyContent: "center",
                   alignItems: "center",
-                  backgroundColor: "#1DB954",
+                  backgroundColor: "#EB3660",
                 }}
               >
                 <Entypo name="controller-play" size={24} color="white" />
@@ -132,18 +131,7 @@ const SongInfoScreen = () => {
           <View>
               <View style={{marginTop:10,marginHorizontal:12}}>
                   {tracks?.map((track,index) => (
-                      <Pressable style={{marginVertical:10,flexDirection:"row",justifyContent:"space-between"}}>
-                          <View>
-                              <Text style={{fontSize:16,fontWeight:"500",color:"white"}}>{track?.name}</Text>
-                              <View style={{flexDirection:"row",alignItems:"center",gap:8,marginTop:5}}>
-                                  {track?.artists?.map((item,index) => (
-                                      <Text style={{fontSize:16,fontWeight:"500",color:"gray"}}>{item?.name}</Text>
-                                  ))}
-                              </View>
-
-                          </View>
-                          <Entypo name="dots-three-vertical" size={24} color="white" />
-                      </Pressable>
+                      <SongItem item={track} key={index} onPress={play} />
                   ))}
               </View>
           </View>

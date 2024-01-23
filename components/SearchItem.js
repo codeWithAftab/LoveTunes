@@ -3,11 +3,13 @@ import React ,{useContext} from  "react";
 import { AntDesign } from "@expo/vector-icons";
 import { Entypo } from "@expo/vector-icons";
 import { Player } from "../PlayerContext";
-import { format_title } from "../lib/methods";
 
-const SongItem = ({ item, onPress, isPlaying }) => {
+const SearchItem = ({ item }) => {
   const { currentTrack, setCurrentTrack } = useContext(Player);
   const handlePress = () => {
+    // if (item?.type == "song" ) {
+    //     const 
+    // }
     setCurrentTrack(item);
     onPress(item)
   } 
@@ -38,7 +40,7 @@ const SongItem = ({ item, onPress, isPlaying }) => {
           {item?.name}
         </Text>
         <Text style={{ marginTop: 4, color: "#989898" }}>
-          {format_title(item?.primaryArtists)}
+          {item?.type}
         </Text>
       </View>
 
@@ -57,6 +59,6 @@ const SongItem = ({ item, onPress, isPlaying }) => {
   );
 };
 
-export default SongItem;
+export default SearchItem;
 
 const styles = StyleSheet.create({});

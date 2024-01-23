@@ -15,7 +15,7 @@ const RecentlyPlayedCard = ({ item }) => {
     >
       <Image
         style={{ width: 130, height: 130, borderRadius: 5 }}
-        source={{ uri: item.track.album.images[0].url }}
+        source={{ uri: item.image[1].url }}
       />
       <Text
         numberOfLines={1}
@@ -26,7 +26,7 @@ const RecentlyPlayedCard = ({ item }) => {
           marginTop: 10,
         }}
       >
-        {item?.track?.name}
+        {item?.name}
       </Text>
     </Pressable>
   );
