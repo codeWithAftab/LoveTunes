@@ -25,7 +25,6 @@ import {
   import { Audio } from "expo-av";
   import { debounce } from "lodash";
 import { SaavnAPI } from "../lib/api";
-import FloatPlayer from "../player/FloatPlayer";
 import { useFloatPlayer } from "../StackNavigator";
   
   const SearchScreen = () => {
@@ -50,7 +49,8 @@ import { useFloatPlayer } from "../StackNavigator";
     const { currentTrack, currentSound, isPlaying, play } = useFloatPlayer();
 
     console.log("method", play)
-    async function searchSong(query) {
+    async function searchSong() {
+
         const saavnApi = new SaavnAPI()
         try{
           const data = await saavnApi.searchSong(query)
@@ -62,13 +62,9 @@ import { useFloatPlayer } from "../StackNavigator";
         }
     }
 
-
-   
-
-    const debouncedSearch = debounce(searchSong, 1200);
+    // const debouncedSearch = debounce(searchSong, 1200);
     const handleInputChange = (text) => {
       setQuery(text);
-      debouncedSearch(text);
     };
     return (
       <>
@@ -118,7 +114,7 @@ import { useFloatPlayer } from "../StackNavigator";
                   onChangeText={(text) => handleInputChange(text)}
                   placeholder="Artist, Songs, or Albums"
                   placeholderTextColor={"black"}
-                  
+                  onSubmitEditing={searchSong}
                   style={{ fontWeight: "500",color:"black", flex:1 }}
                 />
               </Pressable>
@@ -168,10 +164,11 @@ import { useFloatPlayer } from "../StackNavigator";
                       />
                 </Pressable>
                   
-                 
                 })
               
             )}
+        <View style={{ height: 100 }} />
+            
           </ScrollView>
         </View>
   

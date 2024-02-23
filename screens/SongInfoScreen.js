@@ -10,49 +10,64 @@ import { useFloatPlayer } from "../StackNavigator";
 
 const SongInfoScreen = () => {
   const route = useRoute();
-  console.log("route",route.params);
+  // console.log("route",route.params);
   console.log()
-  const { currentTrack, currentSound, isPlaying, play } = useFloatPlayer();
-  
+  const { currentTrack, currentPlaylist, currentSound, isPlaying, play, playPlaylist, stopPlaylist } = useFloatPlayer();
+
+  const [playlist, setPlaylist] = useState(null)
   const [item, setItem] = useState( route.params.item)
   const [tracks, setTracks] = useState([]);
   const navigation = useNavigation();
 
   useEffect(() => {
     fetchSongs(item.id)
-    
   }, []);
+
   
   function showArtistNames(item){
     if (item.type == "playlist") {
-      return ""
+      return "Jass Manak"
     } else if (item.type == "album") {
       return item?.primaryArtists
     } 
     return item?.primaryArtists
-    
-
   }
+
 
   async function fetchSongs(id){
     const api_manager = new SaavnAPI()
-    console.log("type", item.type)
     if (item.type=="album") {
       const data = await api_manager.albumDetails(id)
-      setTracks(data.songs)
+      setPlaylist(data)
     } else if (item.type=="playlist") {
-      console.log("playishkjh")
       const data = await api_manager.playlistDetails(id)
-      setTracks(data.songs)
-      console.log(item)
+      setPlaylist(data)
     }
   }
   // console.log(tracks);
   return (
     <LinearGradient colors={["#040306", "#131624"]} style={{ flex: 1 }}>
-      <ScrollView style={{ marginTop: 50 }}>
+
+    <View  style={{ flexDirection: "row", marginTop: 50, backgroundColor:"#040306", justifyContent: 'space-between'}}>
+      <Pressable
+            onPress={() => navigation.goBack()}
+            style={{ marginHorizontal: 20 }}
+          >
+            <Ionicons name="arrow-back" size={30} color="white" />
+
+          </Pressable>
+
+        <Pressable
+            onPress={() => navigation.goBack()}
+            style={{ marginHorizontal: 20 }}
+          >
+            <Entypo name="dots-three-vertical" size={25} color="white" />
+
+          </Pressable>
+
+      </View>
+      <ScrollView style={{ marginTop: 10 }}>
         <View style={{ flexDirection: "row", padding: 12 }}>
-         
           <View style={{ flex: 1, alignItems: "center" }}>
             <Image
               style={{ width: 250, height: 250, borderRadius:5 }}
@@ -88,14 +103,19 @@ const SongInfoScreen = () => {
  
         </View>
         <Pressable
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginHorizontal: 10,
-            }}
+        
+            style={
+              ({pressed})=>[{
+                // backgroundColor:  "#202020" ,
+                // flexDirection: "row",
+                // alignItems: "center",
+                justifyContent:"center",
+                justifyContent: "space-between",
+                marginHorizontal: 10,
+            }]
+          }
           >
-            <Pressable
+            {/* <Pressable
               style={{
                 width: 30,
                 height: 30,
@@ -106,32 +126,54 @@ const SongInfoScreen = () => {
               }}
             >
               <AntDesign name="arrowdown" size={20} color="white" />
-            </Pressable>
+            </Pressable> */}
 
             <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
+              style={{ flexDirection: "row",  alignItems: "center", justifyContent:"center" }}
             >
-         
-              <Pressable
-           
-                style={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: 30,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  backgroundColor: "#EB3660",
-                }}
-              >
-                <Entypo name="controller-play" size={24} color="white" />
-              </Pressable>
+              
+
+              {
+                currentPlaylist?.id == playlist?.id ? (
+                  <Pressable
+                    onPress={stopPlaylist}
+                    style={{
+                      width: 60,
+                      height: 60,
+                      borderRadius: 30,
+                      justifyContent: "center",
+                      alignItems: "center",
+                      backgroundColor: "#EB3660",
+                    }}
+                  >
+                      <Entypo name="controller-paus" size={24} color="white" />
+                  </Pressable>
+                ) : 
+                <Pressable
+                    onPress={()=> {playPlaylist(playlist)}}
+                    style={{
+                      width: 60,
+                      height: 60,
+                      borderRadius: 30,
+                      justifyContent: "center",
+                      alignItems: "center",
+                      backgroundColor: "#EB3660",
+                    }}
+                  >
+                      <Entypo name="controller-play" size={24} color="white" />
+                  </Pressable>
+
+              }
+            
+
+             
             </View>
           </Pressable>
 
           <View>
               <View style={{marginTop:10,marginHorizontal:12}}>
-                  {tracks?.map((track,index) => (
-                      <SongItem item={track} key={index} onPress={play} />
+                  {playlist?.songs?.map((track,index) => (
+                      <SongItem currentTrack={currentTrack} item={track} key={index} onPress={play} />
                   ))}
               </View>
           </View>

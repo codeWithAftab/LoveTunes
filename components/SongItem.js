@@ -5,10 +5,8 @@ import { Entypo } from "@expo/vector-icons";
 import { Player } from "../PlayerContext";
 import { format_title } from "../lib/methods";
 
-const SongItem = ({ item, onPress, isPlaying }) => {
-  const { currentTrack, setCurrentTrack } = useContext(Player);
+const SongItem = ({ currentTrack, item, onPress, isPlaying }) => {
   const handlePress = () => {
-    setCurrentTrack(item);
     onPress(item)
   } 
   
@@ -26,7 +24,7 @@ const SongItem = ({ item, onPress, isPlaying }) => {
         <Text
           numberOfLines={1}
           style={
-            item == currentTrack
+            item.id == currentTrack?.id
               ? {
                   fontWeight: "bold",
                   fontSize: 16,

@@ -5,7 +5,6 @@ import { format_title, get_formated_title } from "../lib/methods";
 
 const GenericCard = ({ item , type}) => {
   const navigation = useNavigation();
-    console.log(type)
     
   return (
     <Pressable key={item.id} style={{ margin: 10 }} onPress={()=>{navigation.navigate("Info", {item: item})}}>

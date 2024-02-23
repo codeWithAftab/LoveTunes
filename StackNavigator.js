@@ -3,17 +3,16 @@ import HomeScreen from "./screens/HomeScreen";
 import { Entypo } from "@expo/vector-icons";
 import { Ionicons } from '@expo/vector-icons';
 import { Audio } from "expo-av";
+import { debounce } from 'lodash';
 import { AntDesign, EvilIcons } from "@expo/vector-icons";
 import ProfileScreen from "./screens/ProfileScreen";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { NavigationContainer } from "@react-navigation/native";
-import LoginScreen from "./screens/LoginScreen";
 import LikedSongsScreen from "./screens/LikedSongsScreen";
 import SongInfoScreen from "./screens/SongInfoScreen";
 import SearchScreen from "./screens/SearchScreen";
 import FloatPlayer from "./player/FloatPlayer";
-import React, { useState, useContext, createContext} from "react";
-import PlayerModal from "./player/PlayerModal";
+import React, { useState, useContext, createContext, useRef} from "react";
 
 
 const Tab = createBottomTabNavigator();
@@ -85,21 +84,7 @@ function BottomTabs() {
             ),
         }}
       />
-      {/* <Tab.Screen
-        name="Profile"
-        component={SongInfoScreen}
-        options={{
-          tabBarLabel: "Profile",
-          headerShown: false,
-          tabBarLabelStyle: { color: "white", fontWeight:"bold", fontSize: 12, paddingBottom: 3 },
-          tabBarIcon: ({ focused }) =>
-            focused ? (
-                <Ionicons name="person" size={24} color="#EB3660" />
-            ) : (
-                <Ionicons name="person-outline" size={24} color="white" />
-            ),
-        }}
-      /> */}
+     
     </Tab.Navigator>
   );
 }
@@ -107,28 +92,38 @@ function BottomTabs() {
 
 
 const Stack = createNativeStackNavigator();
+
   function Navigation(){
     const [currentSound, setCurrentSound] = useState(null);
     const [currentTrack, setCurrentTrack] = useState(null);
+    const [currentPlaylist, setCurrentPlaylist] = useState(null);
     const [isPlaying, setIsPlaying] = useState(false);
+    const value = useRef(0)
     const [progress, setProgress] = useState(null);
+    const [playbackStatus, setPlaybackStatus] = useState(null);
     const [currentTime, setCurrentTime] = useState(0);
     const [totalDuration, setTotalDuration] = useState(0);
-    const [showPlayerModal, setShowPlayerModal] = useState(false)
 
     const play = async (nextTrack) => {
       console.log("nextTrack", nextTrack.name);
       const preview_url = nextTrack?.downloadUrl[2]?.link;
+
       try {
-        // console.log("currentSound", currentSound)
+        console.log("setting current track..")
         setCurrentTrack(nextTrack);
+        console.log("current track complete")
+
         if (currentSound) {
-          await currentSound.stopAsync();
+          console.log("stopping...", nextTrack.name)
+          const status = await currentSound.stopAsync();
+          console.log(status)
+          console.log("song stopped", nextTrack.name)
         }
+
         await Audio.setAudioModeAsync({ 
           playsInSilentModeIOS: true,
           staysActiveInBackground: true,
-          shouldDuckAndroid: false,
+          shouldDuckAndroid: true,
         });
         const { sound, status } = await Audio.Sound.createAsync(
           {
@@ -140,62 +135,98 @@ const Stack = createNativeStackNavigator();
           },
           onPlaybackStatusUpdate
         );
-        setIsPlaying(status.isLoaded);
+        setPlaybackStatus(status);
+        setTotalDuration(status.durationMillis);
         onPlaybackStatusUpdate(status);
         setCurrentSound(sound);
+
         await sound.playAsync();
       } catch (err) {
         console.log("Error in ")
         console.log(err.message);
       }
     };
+  
+  const playPlaylist = async (playlist)=>{
+    setCurrentPlaylist(playlist)
+    play(playlist.songs[0])
+  }
+
+  const stopPlaylist = async ()=>{
+    setCurrentPlaylist(null)
+    if (currentSound) {
+      await currentSound.pauseAsync();
+    }
+    if (isPlaying) {
+      setIsPlaying(false)
+    }
+  }
+  
+  const playNextTrack = async () => {
+    if (currentSound) {
+      const status = await currentSound.stopAsync();
+      if (!status.isPlaying) {
+        setCurrentSound(null)
+      }
+      console.log(status)
+    }
+
+    if (currentPlaylist) {
+      value.current += 1;
+      if (value.current < currentPlaylist.songs.length) {
+        const nextTrack = currentPlaylist?.songs[value.current];
+        setCurrentTrack(nextTrack);
+     
+        await play(nextTrack);
+      } else {
+        console.log("end of playlist");
+      }
+      
+    }
+
+  };
+  
+const debouncedSetCurrentTime = debounce(setCurrentTime, 100);
+
 
     const onPlaybackStatusUpdate = async (status) => {
-      // console.log("status", status);
-      // if (status.isLoaded && status.isPlaying) {
-      //   const progress = status.positionMillis / status.durationMillis;
-      //   console.log("progresss", progress);
-      //   setProgress(progress);
-      //   setCurrentTime(status.positionMillis);
-      //   setTotalDuration(status.durationMillis);
-      // }
+      console.log("status", status);
+      if (status.isLoaded && status.isPlaying) {
+        const progress = status.positionMillis / status.durationMillis;
+        console.log("progresss", progress);
+        debouncedSetCurrentTime(status.positionMillis);
+      }
   
       if (status.didJustFinish === true) {
-        await handlePlayPause()
-      }
-    };
-
-    const handlePlayPause = async () => {
-      setIsPlaying(!isPlaying);
-      // console.log(`current sound `, currentSound)
-      if (currentSound) {
-        if (isPlaying) {
-          console.log("changginn")
-          await currentSound.pauseAsync();
-        } else {
-          await currentSound.playAsync();
-        }
+        setCurrentSound(null);
+        playNextTrack()
       }
     };
 
 
     return (
-      <FloatPlayerContext.Provider value={{ currentTrack, currentSound, isPlaying, handlePlayPause, play }}>
+      <FloatPlayerContext.Provider value={{ currentTrack, currentSound, isPlaying, currentPlaylist, play, playPlaylist, stopPlaylist }}>
 
         <NavigationContainer>
+          
             <Stack.Navigator>
-                {/* <Stack.Screen name="Login" component={LoginScreen} options={{headerShown:false}}/> */}
                 <Stack.Screen name="Main" component={BottomTabs} options={{headerShown:false}}/>
                 <Stack.Screen name="Liked" component={LikedSongsScreen} options={{headerShown:false}}/> 
                 <Stack.Screen name="Search" component={SearchScreen} options={{headerShown:false}}/> 
                 <Stack.Screen name="Info" component={SongInfoScreen} options={{headerShown:false}}/>
             </Stack.Navigator>
-                {/* FloatPlayer is accessible in all screens via the context */}
-            {/* <FloatPlayer /> */}
-            <FloatPlayer  modalVisible={showPlayerModal} setModalVisible={setShowPlayerModal} currentTrack={currentTrack} setCurrentSound={setCurrentSound} setCurrentTrack={setCurrentSound} currentSound={currentSound} setIsPlaying={setIsPlaying}  handlePlayPause={handlePlayPause} />
-          {/* {
-              showPlayerModal && <PlayerModal modalVisible={showPlayerModal} setModalVisible={setShowPlayerModal} setCurrentTrack={setCurrentSound} handlePlayPause={handlePlayPause} progress={progress} currentTime={currentTime} totalDuration={totalDuration} />
-          } */}
+    
+            {
+              currentTrack && <FloatPlayer currentTrack={currentTrack}
+                                           setCurrentSound={setCurrentSound} 
+                                           setCurrentTrack={setCurrentSound} 
+                                           currentSound={currentSound}  
+                                           currentTime={currentTime}
+                                           progress={progress}
+                                           totalDuration={totalDuration}
+                                           />
+            }
+      
         </NavigationContainer>
 
       </FloatPlayerContext.Provider>

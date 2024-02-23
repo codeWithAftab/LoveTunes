@@ -35,8 +35,6 @@ const HomeScreen = ( ) => {
   const [topCharts, setTopCharts] = useState([]);
 
   const { currentTrack, currentSound, isPlaying, play } = useFloatPlayer();
-  
-
 
   const greetingMessage = () => {
     const currentTime = new Date().getHours();
@@ -50,6 +48,7 @@ const HomeScreen = ( ) => {
   };
   const message = greetingMessage();
 
+
   const getHomePageData = async () => {
     const saavnApi = new SaavnAPI()
     const data = await saavnApi.getHomePageData("punjabi,hindi");
@@ -59,11 +58,15 @@ const HomeScreen = ( ) => {
     setTrendingAlbum(data.trending.albums)
     setTopPlaylist(data.playlists)
     setContentLoaded(true)
+    console.log(data)
   };
-  console.log("current track",currentTrack)
+
+
   useEffect(() => {
     getHomePageData();
   }, []);
+  
+
   const renderItem = ({ item }) => {
     return (
       <Pressable
@@ -166,7 +169,7 @@ const HomeScreen = ( ) => {
           )
         }
 
-        <View style={{ height: 100 }} />
+        <View style={{ height: currentTrack ? 120 : 80 }} />
 
     
 

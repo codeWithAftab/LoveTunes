@@ -18,55 +18,83 @@ import { Audio } from "expo-av";
 import { debounce, last } from "lodash";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFloatPlayer } from "../StackNavigator";
+import PlayerModal from "../components/PlayerModal";
 
 
-const FloatPlayer = ({modalVisible, setModalVisible,  playNextTrack, setCurrentSound, setCurrentTrack, setIsPlaying,  handlePlayPause}) => {
-    const { currentTrack, currentSound, isPlaying, play } = useFloatPlayer();
+const FloatPlayer = ({ 
+                      playNextTrack,
+                      setCurrentSound,
+                      setCurrentTrack,  
+                      currentTime, 
+                      progress, 
+                      totalDuration
+                    }) => {
+                      
+    const { currentTrack, currentSound, playbackStatus, play } = useFloatPlayer();
+    const [isPlaying, setIsPlaying] = useState(true)
+    const [modalVisible, setModalVisible] = useState(false);
+
+    useEffect(() => {
+          // updateIsPlayingStatus()
     
-    useEffect( () => {
-        async function setLastPlayed(){
-            // await AsyncStorage.clear()
-            const lastPlayedTrack = JSON.parse(await  AsyncStorage.getItem("lastPlayedTrack"))
-            print("cached lastplayed", lastPlayedTrack)
-            const currSound = lastPlayedTrack.currentSound
-            const lastTrack = lastPlayedTrack.currentTrack
-            const is_playing = lastPlayedTrack.isPlaying
+      return () => { }
+    }, [])
 
-            if(!currentTrack && lastPlayedTrack){
-                console.log(lastPlayedTrack)
-                setIsPlaying(is_playing)
-                setCurrentSound(currSound)
-                console.log("lastPlayedTrack")
-                setCurrentTrack(lastTrack)
-            } else{
-                console.log("current track")
-                setCurrentTrack(currentTrack)
-            }
-        }
-       
-      return () => {}
-    }, [])  
+    async function updateIsPlayingStatus(){
+      if (currentSound) {
+        const status = await currentSound.getStatusAsync()
+        console.log(status)
+        setIsPlaying(status.isPlaying)
+      }
+    }
+    
+    const handlePlayPause = async () => {
+      setIsPlaying(!isPlaying)
+      console.log(currentSound)
+      
+      if (currentSound) {
+          if (isPlaying) {
+            const status = await currentSound.pauseAsync();
+          }
+          else {
+            const status = await currentSound.playAsync();
+          }
+      }
+    };
+    console.log("syate unc", setModalVisible)
+
+
+    // const updateStatus = async ()=>{
+    //   const status = await currentSound.getStatusAsync()
+    //   setIsPlaying(status.isPlaying)
+    // } 
 
     function format_title(title){
-      console.log(title)
       return title.length > 18 ? title.substring(0, 18) + "..." : title
   }
   return (
     <View>
-      {currentSound && (
+      {(
           <Pressable
-            onPress={()=>{setModalVisible(true)}}
+            onPress={()=>{
+              console.log("modalVisible", modalVisible)
+              setModalVisible(true)}}
             style={{
-              backgroundColor: '#292929',
+              backgroundColor: '#030303',
+              shadowColor: "white",
+              shadowOffset: {
+                width: 30,
+                height: -5,
+              },
               width: "95%",
               padding: 10,
               marginLeft: "auto",
               marginRight: "auto",
-              marginBottom: 35,
+              marginBottom: 34,
               position: "absolute",
-              borderRadius: 6,
-              height: 58,
-              left: 12,
+              borderRadius:5,
+              height: 60,
+              left: 10,
               bottom: 25,
               justifyContent: "space-between",
               flexDirection: "row",
@@ -76,7 +104,7 @@ const FloatPlayer = ({modalVisible, setModalVisible,  playNextTrack, setCurrentS
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
               <Image
-                style={{ width: 40, height: 40, borderRadius: 5 }}
+                style={{ width: 45, height: 45, borderRadius: 5 }}
                 source={{ uri: currentTrack?.image[1].link}}
               />
               <View style={{ flexDirection: "column", alignItems: "center" }}>
@@ -108,12 +136,11 @@ const FloatPlayer = ({modalVisible, setModalVisible,  playNextTrack, setCurrentS
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
               {
                 isPlaying ?  (<Pressable onPress={handlePlayPause}>
-
                 <AntDesign name="pausecircle" size={30} color="white" />
               </Pressable>) :
               (
               <Pressable onPress={handlePlayPause}>
-                <AntDesign name="play" size={30} color="#EB3660" />
+                <AntDesign name="play" size={30} color="white" />
               </Pressable>
               )
               }
@@ -121,6 +148,19 @@ const FloatPlayer = ({modalVisible, setModalVisible,  playNextTrack, setCurrentS
             </View>
           </Pressable>
         )}
+        {
+          modalVisible &&  <PlayerModal currentTrack={currentTrack}
+                              handlePlayPause={handlePlayPause} 
+                              isModalVisible={ modalVisible } 
+                              setIsModalVisible={setModalVisible}
+                              currentTime={currentTime}
+                              progress={progress}
+                              isPlaying={isPlaying}
+                              totalDuration={totalDuration}
+                              />
+        }
+       
+
     </View>
   )
 }

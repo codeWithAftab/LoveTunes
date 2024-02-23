@@ -1,14 +1,14 @@
 import {
-    ActivityIndicator,
-    FlatList,
-    Image,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
-  } from "react-native";
+  ActivityIndicator,
+  FlatList,
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import React, { useState, useEffect, useContext, useRef } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -19,34 +19,45 @@ import { Feather, FontAwesome } from "@expo/vector-icons";
 import { Entypo } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import SongItem from "../components/SongItem";
+import PropTypes from 'prop-types';
 import { Player } from "../PlayerContext";
-import { BottomModal } from "react-native-modals";
+import Modal, { BottomModal } from "react-native-modals";
 import { ModalContent } from "react-native-modals";
-import { useFloatPlayer } from "../StackNavigator";
+import Slider from "@react-native-community/slider";
 
 
-const PlayerModal = ({modalVisible, setModalVisible, handlePlayPause, progress, currentTime, totalDuration, playPreviousTrack, playNextTrack}) => {
-  const { currentTrack, currentSound, isPlaying, play } = useFloatPlayer();
 
-  const circleSize = 12;
+const PlayerModal = ({isModalVisible,
+                    setIsModalVisible,
+                     currentTrack, 
+                     handlePlayPause,
+                     currentTime,
+                     totalDuration,
+                     isPlaying
+}) => {
+
   const formatTime = (time) => {
     const minutes = Math.floor(time / 60000);
     const seconds = Math.floor((time % 60000) / 1000);
     return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
   };
+  const progress = currentTime / totalDuration
+
+  const circleSize = 0
+  console.log("tyoe", typeof(isModalVisible))
 
   return (
-      <View>
-
+    <View>
         <BottomModal
-          visible={modalVisible}
-          onHardwareBackPress={() => setModalVisible(false)}
+          visible={isModalVisible}
+          onHardwareBackPress={() => setIsModalVisible(!isModalVisible)}
           swipeDirection={["up", "down"]}
           swipeThreshold={200}
         >
           <ModalContent
-            style={{ height: "100%", width: "100%", backgroundColor: "#5072A7" }}
+            style={{ height: "100%", width: "100%", backgroundColor: "#030303" }}
           >
+         
             <View style={{ height: "100%", width: "100%", marginTop: 40 }}>
               <Pressable
                 style={{
@@ -56,7 +67,7 @@ const PlayerModal = ({modalVisible, setModalVisible, handlePlayPause, progress, 
                 }}
               >
                 <AntDesign
-                  onPress={() => setModalVisible(!modalVisible)}
+                  onPress={() => setIsModalVisible(!isModalVisible)}
                   name="down"
                   size={24}
                   color="white"
@@ -96,10 +107,25 @@ const PlayerModal = ({modalVisible, setModalVisible, handlePlayPause, progress, 
                     </Text>
                   </View>
   
-                  <AntDesign name="heart" size={24} color="#1DB954" />
+                  <AntDesign name="heart" size={24} color="#EB3660" />
                 </View>
   
                 <View style={{ marginTop: 10 }}>
+                  {/* <Slider style={{
+                      width: "100%",
+                      marginTop: 10,
+                      height: 3,
+                      backgroundColor: "gray",
+
+                      borderRadius: 5,
+                    }}
+                          minimumValue={0}
+                          maximumValue={currentTime}
+                          value={progress}
+                          minimumTrackTintColor="grey"
+                          onSlidingComplete={null}
+                          onValueChange={null}
+                        /> */}
                   <View
                     style={{
                       width: "100%",
@@ -162,14 +188,14 @@ const PlayerModal = ({modalVisible, setModalVisible, handlePlayPause, progress, 
                   }}
                 >
                   <Pressable>
-                    <FontAwesome name="arrows" size={30} color="#03C03C" />
+                    <FontAwesome name="arrows" size={30} color="#EB3660" />
                   </Pressable>
-                  <Pressable onPress={playPreviousTrack}>
+                  <Pressable>
                     <Ionicons name="play-skip-back" size={30} color="white" />
                   </Pressable>
                   <Pressable onPress={handlePlayPause}>
                     {isPlaying ? (
-                      <AntDesign name="pausecircle" size={60} color="gray" />
+                      <AntDesign name="pausecircle" size={60} color="white" />
                     ) : (
                       <Pressable
                         onPress={handlePlayPause}
@@ -186,23 +212,31 @@ const PlayerModal = ({modalVisible, setModalVisible, handlePlayPause, progress, 
                       </Pressable>
                     )}
                   </Pressable>
-                  <Pressable onPress={playNextTrack}>
+                  <Pressable>
                     <Ionicons name="play-skip-forward" size={30} color="white" />
                   </Pressable>
                   <Pressable>
-                    <Feather name="repeat" size={30} color="#03C03C" />
+                    <Feather name="repeat" size={30} color="#EB3660" />
                   </Pressable>
                 </View>
               </View>
             </View>
           </ModalContent>
         </BottomModal>
-      </View>
-
+    </View>
   )
 }
 
+// Inside your PlayerModal component
+PlayerModal.propTypes = {
+  // Other prop types
+  isModalVisible: PropTypes.bool.isRequired,
+  setIsModalVisible: PropTypes.func.isRequired,
+  // Other prop types
+};
+
 export default PlayerModal
+
 
 const styles = StyleSheet.create({
   progressbar: {
